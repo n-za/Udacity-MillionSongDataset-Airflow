@@ -50,5 +50,9 @@ The following variables have to defined:
   
   
 # Improvements
+## Implemented Improvements
+* The project template used the identifier of the source systems to define the primary keys of the tables in the dimensional model. With this approach one needs to discard the records where the identifier is not provided. This approach also prevents us to combine in our dimensional model multiple sources for the raw data. Therefore I have added to the tables of the dimensional model suggorate keys.
+
+## Future Improvements
 * The sanity checks could have been put into a sub dag.
 * There is a tight coupling between the schedule (hourly) and the SQL command used to load the staging table <code>songplays</code>. 
