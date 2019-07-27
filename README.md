@@ -44,15 +44,15 @@ The following variables have to defined:
 * <code>json_event_format</code> is the S3 path of the format description file for the log data
 * <code>json_song_format</code> is the S3 path of the format description for the song data.
 
-### Connection to be defined
+### Connections to be defined
 * <code>aws_credentials</code> contains the AWS access key id and secret key id.
 * <redshift> contains the connection information to the redshift cluster to be used
   
   
 # Improvements
 ## Implemented Improvements
-* The project template used the identifier of the source systems to define the primary keys of the tables in the dimensional model. With this approach one needs to discard the records where the identifier is not provided. This approach also prevents us to combine in our dimensional model multiple sources for the raw data. Therefore I have added to the tables of the dimensional model suggorate keys.
+* The project template used the identifiers of the source systems to define the primary keys of the tables in the dimensional model. With this approach one needs to discard the records where the identifier is not provided. This approach also prevents us to combine in our dimensional model multiple sources for the raw data. Therefore I have added to the tables of the dimensional model suggorate keys.
 
 ## Future Improvements
-* The sanity checks could have been put into a sub dag.
-* There is a tight coupling between the schedule (hourly) and the SQL command used to load the staging table <code>songplays</code>. 
+* The sanity checks and table creation could have been put into a sub dag.
+* There is currently a tight coupling between the schedule (hourly) and the SQL command used to load the staging table <code>songplays</code>. 
