@@ -12,6 +12,9 @@ The coding activity consisted in:
 ### Load_songs_and_events.py
 This is the main file of the project. It provides with all the details of the DAG used for the ELT job.
 
+### ddl_songs_and_events
+This dag allows to create the staging tables and dimensional model.
+
 ### Plugin File Helpers/sql_queries
 The file contains a class, SqlQueries, more or less used as a namespace that defines several Dictionnaries of SQL commands and subqueries:
 
