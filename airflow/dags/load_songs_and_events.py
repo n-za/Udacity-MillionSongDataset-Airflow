@@ -39,60 +39,6 @@ dag = DAG('load_songs_and_events',
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
 
-create_staging_songs = PostgresOperator(
-    task_id = "create_staging_songs",
-    postgres_conn_id = "redshift",
-    dag = dag,
-    sql = SqlQueries.create_queries['staging_songs']
-)
-                                    
-create_staging_events = PostgresOperator(
-    task_id = "create_staging_events",
-    postgres_conn_id = "redshift",
-    dag = dag,
-    sql= SqlQueries.create_queries['staging_events']
-)
-
-create_songplays = PostgresOperator(
-    task_id = "create_songplays",
-    postgres_conn_id = "redshift",
-    dag = dag,
-    sql= SqlQueries.create_queries['songplays']
-)
-
-
-create_users = PostgresOperator(
-    task_id = "create_users",
-    postgres_conn_id = "redshift",
-    dag = dag,
-    sql= SqlQueries.create_queries['users']
-)
-
-
-create_artists = PostgresOperator(
-    task_id = "create_artists",
-    postgres_conn_id = "redshift",
-    dag = dag,
-    sql= SqlQueries.create_queries['artists']
-)
-
-
-create_songs = PostgresOperator(
-    task_id = "create_songs",
-    postgres_conn_id = "redshift",
-    dag = dag,
-    sql= SqlQueries.create_queries['songs']
-)
-
-
-create_time = PostgresOperator(
-    task_id = "create_time",
-    postgres_conn_id = "redshift",
-    dag = dag,
-    sql= SqlQueries.create_queries['time']
-)
-
-
 stage_events_to_redshift = StageToRedshiftOperator(
     task_id='Stage_events',
     dag=dag,
@@ -156,107 +102,33 @@ load_time_dimension_table = LoadDimensionOperator(
 # TODO Implement the checks as an SubDag.
 run_quality_checks = DummyOperator(task_id='Run_checks_execution',  dag=dag)
 
-run_empty_songs = DataQualityOperator(
-    task_id='Empty_songs_table_test',
+run_empty_tables = DataQualityOperator(
+    task_id='Empty_tables_test',
     redshift_conn_id="redshift",
-    test_name = 'Empty songs table test',
-    sql_command = SqlQueries.check_queries['count_songs'],
+    sql_commands = SqlQueries.cardinality_queries,
     check_function = lambda x: x > 0,
     dag=dag,
 )
 
-run_empty_users = DataQualityOperator(
-    task_id='Empty_users_table_test',
+run_dangling_keys = DataQualityOperator(
+    task_id='Foreign_Key_violation',
     redshift_conn_id="redshift",
-    test_name = 'Empty users table test',
-    sql_command = SqlQueries.check_queries['count_users'],
-    check_function = lambda x: x > 0,
-    dag=dag,
-)
-
-run_empty_artists = DataQualityOperator(
-    task_id='Empty_artists_table_test',
-    redshift_conn_id="redshift",
-    test_name = 'Empty artists table test',
-    sql_command = SqlQueries.check_queries['count_artists'],
-    check_function = lambda x: x > 0,
-    dag=dag,
-)
-
-
-run_empty_time = DataQualityOperator(
-    task_id='Empty_time_table_test',
-    redshift_conn_id="redshift",
-    test_name = 'Empty time table test',
-    sql_command = SqlQueries.check_queries['count_time'],
-    check_function = lambda x: x > 0,
-    dag=dag,
-)
-
-run_dangling_songs = DataQualityOperator(
-    task_id='Foreign_Key_violation_with_songkey',
-    redshift_conn_id="redshift",
-    test_name = 'songkey not found in songs table?',
-    sql_command = SqlQueries.check_queries['dangling_songs'],
-    check_function = lambda x: x < 1,
-    dag=dag,
-)
-
-run_dangling_users = DataQualityOperator(
-    task_id='Foreign_Key_violation_with_userkey',
-    redshift_conn_id="redshift",
-    test_name = 'userkey not found in users table?',
-    sql_command = SqlQueries.check_queries['dangling_users'],
-    check_function = lambda x: x < 1,
-    dag=dag,
-)
-
-run_dangling_artists = DataQualityOperator(
-    task_id='Foreign_Key_violation_with_artistkey',
-    redshift_conn_id="redshift",
-    test_name = 'artistkey not found in artists table?',
-    sql_command = SqlQueries.check_queries['dangling_artists'],
-    check_function = lambda x: x < 1,
-    dag=dag,
-)
-run_dangling_time = DataQualityOperator(
-    task_id='Foreign_Key_violation_with_start_time',
-    redshift_conn_id="redshift",
-    test_name = 'start_time not found in time table?',
-    sql_command = SqlQueries.check_queries['dangling_time'],
+    sql_command = SqlQueries.foreign_key_queries,
     check_function = lambda x: x < 1,
     dag=dag,
 )
 
 end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)
 
-staging_phase_operator = DummyOperator(task_id='Staging',  dag=dag)
-
 loading_phase_operator = DummyOperator(task_id='Loading',  dag=dag)
 
 
-# Allocate ressources if needed
-start_operator >> create_staging_events >> staging_phase_operator 
-start_operator >> create_staging_songs >> staging_phase_operator 
-start_operator >> create_users >> staging_phase_operator 
-start_operator >> create_artists >> staging_phase_operator 
-start_operator >> create_songs >> staging_phase_operator 
-start_operator >> create_time >> staging_phase_operator 
-start_operator >> create_songplays >> staging_phase_operator 
-# Fill in the staging tables
-staging_phase_operator >> stage_songs_to_redshift >> loading_phase_operator
-staging_phase_operator >> stage_events_to_redshift >> loading_phase_operator
+# stage the raw data
+start_operator >> [stage_songs_to_redshift, stage_events_to_redshift] >> loading_phase_operator
 # Load dimensions and fact table
 loading_phase_operator >> load_user_dimension_table >> load_songplays_table
 loading_phase_operator >> load_artist_dimension_table >> load_song_dimension_table >> load_songplays_table 
 load_songplays_table >> load_time_dimension_table >> run_quality_checks
 # finish with sanity checks
-run_quality_checks >> run_empty_songs >> end_operator
-run_quality_checks >> run_dangling_songs >> end_operator
-run_quality_checks >> run_empty_users >> end_operator
-run_quality_checks >> run_dangling_users >> end_operator
-run_quality_checks >> run_empty_artists >> end_operator
-run_quality_checks >> run_dangling_artists >> end_operator
-run_quality_checks >> run_empty_time >> end_operator
-run_quality_checks >> run_dangling_time >> end_operator
+run_quality_checks >> [run_empty_tables, run_dangling_keys] >> end_operator
 

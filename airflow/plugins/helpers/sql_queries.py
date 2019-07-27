@@ -2,7 +2,9 @@ class SqlQueries:
     insert_queries = {}
     create_queries = {}
     not_exists_subqueries = {}
-    check_queries = {}
+    cardinality_queries = {}
+    foreign_key_queries = {}
+    cardinality_template = "SELECT COUNT(*) FROM {table_name}"
     create_queries['staging_events'] = ("""
 		CREATE TABLE IF NOT EXISTS public.staging_events (
 			artist varchar(256),
@@ -201,39 +203,29 @@ class SqlQueries:
         WHERE dold.first_name = dnew.firstname AND dold.last_name = lastname)
     """)
 
-    check_queries['count_songs'] = ("""
-        SELECT COUNT(*) FROM public.songs
-    """)
+    cardinality_queries['count_songs'] = (cardinality_template.format(table_name='songs'))
     
-    check_queries['count_artists'] = ("""
-        SELECT COUNT(*) FROM public.artists
-    """)
+    cardinality_queries['count_artists'] = (cardinality_template.format(table_name='artists'))
     
-    check_queries['count_time'] = ("""
-        SELECT COUNT(*) FROM public.time
-    """)
+    cardinality_queries['count_time'] = (cardinality_template.format(table_name='time'))
 
-    check_queries['count_users'] = ("""
-        SELECT COUNT(*) FROM public.users
-    """)
+    cardinality_queries['count_users'] = (cardinality_template.format(table_name='users'))
 
-    check_queries['count_songplays'] = ("""
-        SELECT COUNT(*) FROM public.songplays
-    """)
+    cardinality_queries['count_songplays'] = (cardinality_template.format(table_name='songplays'))
 
-    check_queries['dangling_songs'] = ("""
+    foreign_key_queries['dangling_songs'] = ("""
         SELECT COUNT(*) FROM songplays f WHERE NOT EXISTS (SELECT '' FROM public.songs dim WHERE dim.songkey = f.songkey)
     """)
     
-    check_queries['dangling_artists'] = ("""
+    foreign_key_queries['dangling_artists'] = ("""
         SELECT COUNT(*) FROM songplays f WHERE NOT EXISTS (SELECT '' FROM public.artists dim WHERE dim.artistkey = f.artistkey)
     """)
     
-    check_queries['dangling_time'] = ("""
+    foreign_key_queries['dangling_time'] = ("""
         SELECT COUNT(*) FROM songplays f WHERE NOT EXISTS (SELECT '' FROM public.time dim WHERE dim.start_time = f.start_time)
     """)
 
-    check_queries['dangling_users'] = ("""
+    foreign_key_queries['dangling_users'] = ("""
         SELECT COUNT(*) FROM songplays f WHERE NOT EXISTS (SELECT '' FROM public.users dim WHERE dim.userkey = f.userkey)
     """)
 
