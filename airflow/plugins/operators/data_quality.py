@@ -41,7 +41,7 @@ class DataQualityOperator(BaseOperator):
         for test_name, sql_command in sql_commands:
             records = redshift_hook.get_records(sql_command)
             if len(records) < 1 or len(records[0]) < 1:
-                raise ValueError(f"Data quality check failed. {self.test_name} returned no results")
+                raise ValueError(f"Data quality check failed. {test_name} returned no results")
             num_records = records[0][0]
             if not self.check_function(num_records):
                 raise ValueError(f"Data quality check failed. {test_name} FAILED: Number of records was: {num_records}")
