@@ -4,7 +4,6 @@ class SqlQueries:
     not_exists_subqueries = {}
     cardinality_queries = {}
     foreign_key_queries = {}
-    cardinality_template = "SELECT COUNT(*) FROM {table_name}"
     create_queries['staging_events'] = ("""
 		CREATE TABLE IF NOT EXISTS public.staging_events (
 			artist varchar(256),
@@ -203,15 +202,25 @@ class SqlQueries:
         WHERE dold.first_name = dnew.firstname AND dold.last_name = lastname)
     """)
 
-    cardinality_queries['count_songs'] = (cardinality_template.format(table_name='songs'))
+    cardinality_queries['count_songs'] = ("""
+        SELECT COUNT(*) FROM songs
+    """)
     
-    cardinality_queries['count_artists'] = (cardinality_template.format(table_name='artists'))
+    cardinality_queries['count_artists'] =  ("""
+        SELECT COUNT(*) FROM artists
+    """)
     
-    cardinality_queries['count_time'] = (cardinality_template.format(table_name='time'))
+    cardinality_queries['count_time'] =  ("""
+        SELECT COUNT(*) FROM time
+    """)
 
-    cardinality_queries['count_users'] = (cardinality_template.format(table_name='users'))
+    cardinality_queries['count_users'] =  ("""
+        SELECT COUNT(*) FROM users
+    """)
 
-    cardinality_queries['count_songplays'] = (cardinality_template.format(table_name='songplays'))
+    cardinality_queries['count_songplays'] =  ("""
+        SELECT COUNT(*) FROM songplays
+    """)
 
     foreign_key_queries['dangling_songs'] = ("""
         SELECT COUNT(*) FROM songplays f WHERE NOT EXISTS (SELECT '' FROM public.songs dim WHERE dim.songkey = f.songkey)

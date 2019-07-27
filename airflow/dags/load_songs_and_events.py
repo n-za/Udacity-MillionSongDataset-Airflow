@@ -113,7 +113,7 @@ run_empty_tables = DataQualityOperator(
 run_dangling_keys = DataQualityOperator(
     task_id='Foreign_Key_violation',
     redshift_conn_id="redshift",
-    sql_command = SqlQueries.foreign_key_queries,
+    sql_commands = SqlQueries.foreign_key_queries,
     check_function = lambda x: x < 1,
     dag=dag,
 )
